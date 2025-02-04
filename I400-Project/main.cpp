@@ -7,6 +7,7 @@
 #include <memory>
 #include <limits>
 #include <map>
+#include <fstream>
 
 // Utility functions for input handling
 void handleInputError() {
@@ -176,6 +177,55 @@ std::vector<std::string> tokenize(const std::string& program, const Automaton& a
     return tokens;
 }
 
+void visualizeAutomaton(const Automaton& automaton) {
+    std::ofstream file("automaton.dot");
+    if (!file) {
+        std::cerr << "Error: Unable to create dot file." << std::endl;
+        return;
+    }
+
+    file << "digraph Automaton {\n";
+    file << "  rankdir=LR;\n"; // Left-to-right layout
+    file << "  size=\"8,5\";\n"; // Set graph size (width, height in inches)
+    file << "  ratio=fill;\n"; // Fill the specified size
+    file << "  nodesep=0.5;\n"; // Increase spacing between nodes
+    file << "  ranksep=0.5;\n"; // Increase spacing between ranks
+
+    // Mark terminal states with double circles
+    for (int state : automaton.statesTerminal) {
+        file << "  " << state << " [shape=doublecircle];\n";
+    }
+
+    // Mark non-terminal states with single circles
+    for (int state : automaton.states) {
+        if (automaton.statesTerminal.find(state) == automaton.statesTerminal.end()) {
+            file << "  " << state << " [shape=circle];\n";
+        }
+    }
+
+    // Transitions
+    for (const auto& transition : automaton.transitions) {
+        file << "  " << transition.first.first << " -> " << transition.second
+            << " [label=\"" << transition.first.second << "\"];\n";
+    }
+
+    file << "}\n";
+    file.close();
+
+    // Generate PNG image using Graphviz (specify full path to dot.exe)
+    std::string dotCommand = "\"C:\\Program Files\\Graphviz\\bin\\dot.exe\" -Tpng automaton.dot -o automaton.png";
+    int result = system(dotCommand.c_str());
+
+    if (result != 0) {
+        std::cerr << "Error: Failed to generate PNG file using Graphviz.\n";
+        return;
+    }
+
+    // Open image on Windows
+    system("start automaton.png");
+}
+
+
 int main() {
     int selectedMenu;
     int nextAutomatonId = 1; // To assign unique IDs to automatons for cases where we don't have spaces to seperate
@@ -188,7 +238,8 @@ int main() {
             << "1- Add an Automaton\n"
             << "2- Delete an Automaton\n"
             << "3- Lexical Analysis\n"
-            << "4- Quit\n";
+            << "4- Visualize an automaton\n"
+            << "5- Quit\n";
         selectedMenu = getValidInput<int>("");
 
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -288,15 +339,26 @@ int main() {
             std::cout << std::endl;
             break;
         }
-
-        case 4:
+        case 4: {
+            std::cout << "4- Visualize an automaton\n";
+            int id = getValidInput<int>("Enter the ID of the automaton to visualize: ");
+            Automaton* automaton = findAutomaton(id);
+            if (!automaton) {
+                std::cout << "no Automaton exists with the given id\n";
+            }
+            else {
+                visualizeAutomaton(*automaton);
+            }
+            break;
+        }
+        case 5:
             std::cout << "Exiting...\n";
             break;
 
         default:
             std::cerr << "Invalid option. Please try again.\n";
         }
-    } while (selectedMenu != 4);
+    } while (selectedMenu != 5);
 
     return 0;
 }

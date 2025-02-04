@@ -1,0 +1,12 @@
+digraph Automaton {
+  rankdir=LR;
+  size="8,5";
+  ratio=fill;
+  nodesep=0.5;
+  ranksep=0.5;
+  1 [shape=doublecircle];
+  2 [shape=doublecircle];
+  0 [shape=circle];
+  0 -> 1 [label="a"];
+  0 -> 2 [label="b"];
+}
